@@ -48,7 +48,11 @@ defmodule Minesweeper do
   # get_pos/3 (get position): recebe um tabuleiro (matriz), uma linha (l) e uma coluna (c) (não precisa validar).
   # Devolve o elemento na posicao tabuleiro[l,c]. Usar get_arr/2 na implementação
 
-  def get_pos(tab,l,c), do: get_arr(get_arr(tab,l),c)
+  def get_pos(tab,l,c) do
+    tab
+    |> get_arr(l)
+    |> get_arr(c)
+  end
 
   # update_pos/4 (update position): recebe um tabuleiro, uma linha, uma coluna e um novo valor. Devolve
   # o tabuleiro modificado com o novo valor na posiçao linha x coluna. Usar update_arr/3 e get_arr/2 na implementação
@@ -137,50 +141,22 @@ defmodule Minesweeper do
   # - Se a posição a ser aberta não possui minas adjacentes, abrimos ela com zero (0) e recursivamente abrimos
   # as outras posições adjacentes a ela
 
+  def is_opened(tab,l,c), do: get_pos(tab,l,c) != "-"
 
-  # Tentativa 1
-  def is_opened(l,c,tab), do: get_pos(tab,l,c) != "-"
-
-  # def abre_jogada([{l,c}|t],mines,tab), do: abre_jogada(l,c,mines,abre_jogada(t,mines,tab))
-  # def abre_jogada([],mines, tab), do: tab
-  # def abre_jogada(l,c,mines,tab) do
-  #   # abre_posicao(l,c,mines,tab) # é isso?
-  #   IO.inspect valid_moves(get_tam(tab),l,c)
-  #   IO.inspect tab
-  #   IO.puts l
-  #   IO.puts c
-  #   cond do
-  #     is_mine(mines,l,c) -> IO.puts "Bomba!"
-  #     # get_pos(tab,l,c) != "-" -> acabar o jogo
-  #     conta_minas_adj(mines,l,c) == 0 && !is_opened(l,c,tab) ->
-  #       update_pos(tab,l,c,conta_minas_adj(mines,l,c))
-  #       abre_jogada(valid_moves(get_tam(tab),l,c),mines,tab)
-  #     true -> update_pos(tab,l,c,conta_minas_adj(mines,l,c))
-  #   end
-  # end
-  def avaliable_moves(moves,tab), do: Enum.filter(moves, fn {l,c} -> get_pos(tab,l,c) == "-" end)
-
-  def abre_jogada([],_mines,tab,_), do: tab
-  def abre_jogada([{l,c}|t],mines,tab,_), do: abre_jogada(l,c,mines,abre_jogada(t,mines,tab,true),true)
-  def abre_jogada(l,c,mines,tab,from_zero) do
+  def abre_jogada([{l,c}|t],mines,tab), do: abre_jogada(t,mines,abre_jogada(l,c,mines,tab))
+  def abre_jogada([],_,tab), do: tab
+  def abre_jogada(l,c,mines,tab) do
     cond do
-      is_mine(tab,l,c) -> "Bomba!"
-      is_opened(l,c,tab) && !from_zero -> "Já Aberta!"
-      conta_minas_adj(mines,l,c) > 0 -> update_pos(tab,l,c,conta_minas_adj(mines,l,c))
-      true ->
-          abre_jogada(
-            avaliable_moves(valid_moves(get_tam(tab),l,c), update_pos(tab,l,c,conta_minas_adj(mines,l,c))),
-            mines,
-            update_pos(tab,l,c,conta_minas_adj(mines,l,c)),
-            true
-          )
+      is_mine(mines,l,c) -> tab
+      is_opened(tab,l,c) -> tab
+      conta_minas_adj(mines,l,c) == 0 ->
+        get_tam(tab)
+          |> valid_moves(l,c)
+          |> abre_jogada(mines,update_pos(tab,l,c,0))
+      true -> update_pos(tab,l,c,conta_minas_adj(mines,l,c))
     end
   end
 
-  def abre_jogada(l,c,mines,tab), do: abre_jogada(l,c,mines,tab,false)
-  #def abre_jogada(l,c,minas,tab) do
-  #   (...)
-  #end
 
 # abre_posicao/4, que recebe um tabueiro de jogos, o mapa de minas, uma linha e uma coluna
 # Essa função verifica:
@@ -188,9 +164,14 @@ defmodule Minesweeper do
 # - Se a posição {l,c} contém uma mina no mapa de minas, então marcar  com "*" no tabuleiro
 # - Se a posição {l,c} está fechada (contém "-"), escrever o número de minas adjascentes a esssa posição no tabuleiro (usar conta_minas)
 
-  #def abre_posicao(tab,minas,l,c) do
-  # (...)
-  #end
+
+  def abre_posicao(tab,minas,l,c) do
+    cond do
+      is_mine(minas,l,c) -> update_pos(tab,l,c,"*")
+      !is_opened(tab,l,c) -> update_pos(tab,l,c,conta_minas_adj(minas,l,c))
+      true -> tab
+    end
+  end
 
 
 
