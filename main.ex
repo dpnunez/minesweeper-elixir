@@ -179,50 +179,99 @@ defmodule Minesweeper do
 # onde estão as minas e os números nas posições adjecentes às minas.Essa função é usada para mostrar
 # todo o tabuleiro no caso de vitória ou derrota. Para implementar esta função, usar a função abre_posicao/4
 
-
-  #def abre_tabuleiro(minas,tab) do
-  #   (...)
-  #end
+  def abre_tabuleiro(_minas,tab,l,_c) when l < 0, do: tab
+  def abre_tabuleiro(minas,tab,l,c) when c < 0, do: abre_tabuleiro(minas,tab,l-1,get_tam(get_arr(minas,0))-1)
+  def abre_tabuleiro(minas,tab,l,c), do: abre_tabuleiro(minas, abre_posicao(tab,minas,l,c),l,c-1)
+  def abre_tabuleiro(minas,tab) do
+    max_index = get_tam(tab) - 1 # quantidade de linhas (mudar caso queira suportar tabuleiros retangulares)
+    abre_tabuleiro(minas,tab,max_index,max_index)
+  end
 
 # board_to_string/1: -- Recebe o tabuleiro do jogo e devolve uma string que é a representação visual desse tabuleiro.
 # Essa função é aplicada no tabuleiro antes de fazer o print dele na tela. Usar a sua imaginação para fazer um
 # tabuleiro legal. Olhar os exemplos no .pdf com a especificação do trabalho. Não esquecer de usar \n para quebra de linhas.
 # Você pode quebrar essa função em mais de uma: print_header, print_linhas, etc...
 
-  #def board_to_string(tab) do
-  # (...)
-  #end
+  def get_space_between_cells(), do: "   "
+  def get_linecounter_space(), do: "     "
+
+  def get_divider(str,0), do: str
+  def get_divider(str,n), do: str <> get_divider(str,n-1)
+
+  def get_columns(c_count) do
+    Range.new(0,c_count-1)
+    |> Enum.map(fn x -> Integer.to_string(x) end)
+    |> Enum.join(get_space_between_cells())
+  end
+
+  def print_header(c_count), do: IO.puts(get_linecounter_space() <> get_columns(c_count))
+  def get_line_cells(line,c_count) do
+      Range.new(0,c_count-1)
+        |> Enum.map(fn x -> get_arr(line, x) end)
+        |> Enum.join(get_space_between_cells())
+  end
+
+  def print_line(line_vector,l,c_count) do
+    IO.puts Integer.to_string(l) <> "  | " <> get_line_cells(line_vector,c_count)
+    IO.puts ""
+  end
+
+  def board_to_string(tab) do
+    qt_colunas = tab |> get_arr(0) |> get_tam()
+    print_header(qt_colunas)
+    IO.puts "   " <> get_divider("_",qt_colunas + (qt_colunas * 3))
+    Enum.reduce(tab, 0, fn (line, i) ->
+      print_line(line,i,qt_colunas)
+      i+1
+    end)
+
+    IO.puts "   " <> get_divider("-",qt_colunas + (qt_colunas * 3))
+  end
 
 # gera_lista/2: recebe um inteiro n, um valor v, e gera uma lista contendo n vezes o valor v
 
-  #def gera_lista(0,v), do: ...
-  #def gera_lista(n,v), do: ...
+  def gera_lista(0,v), do: []
+  def gera_lista(n,v), do: [v|gera_lista(n-1,v)]
 
 # -- gera_tabuleiro/1: recebe o tamanho do tabuleiro de jogo e gera um tabuleiro  novo, todo fechado (todas as posições
 # contém "-"). Usar gera_lista
 
-  #def gera_tabuleiro(n), do: ...
+  def gera_tabuleiro(n), do: gera_lista(n,gera_lista(n,"-"))
 
 # -- gera_mapa_de_minas/1: recebe o tamanho do tabuleiro e gera um mapa de minas zero, onde todas as posições contém false
 
-  #def gera_mapa_de_minas(n), do: ...
+  def gera_mapa_de_minas(n), do: gera_lista(n,gera_lista(n,false))
 
 
 # conta_fechadas/1: recebe um tabueleiro de jogo e conta quantas posições fechadas existem no tabuleiro (posições com "-")
 
-  #def conta_fechadas(tab) do
-  # (...)
-  #end
+  def conta_fechadas(tab) do
+    Enum.reduce(tab, 0, fn (linha,acc1) ->
+      acc1 + Enum.reduce(linha, 0, fn (item, acc2) ->
+        cond do
+          item == "-" -> acc2 + 1
+          true -> acc2
+        end
+      end)
+    end)
+  end
 
 # -- conta_minas/1: Recebe o tabuleiro de Minas (MBoard) e conta quantas minas existem no jogo
 
-  #def conta_minas(minas) do
-  # (...)
-  #end
+  def conta_minas(minas) do
+    Enum.reduce(minas, 0, fn (linha,acc1) ->
+      acc1 + Enum.reduce(linha, 0, fn (item, acc2) ->
+        cond do
+          item == true -> acc2 + 1
+          true -> acc2
+        end
+      end)
+    end)
+  end
 
 # end_game?/2: recebe o tabuleiro de minas, o tauleiro do jogo, e diz se o jogo acabou.
 # O jogo acabou quando o número de casas fechadas é igual ao numero de minas
-  #def end_game(minas,tab), do:  ...
+  def end_game(minas,tab), do:  conta_minas(minas) == conta_fechadas(tab)
 
 #### fim do módulo
 end
@@ -235,48 +284,48 @@ end
 # todas implementadas
 
 defmodule Motor do
-#  def main() do
-#   v = IO.gets("Digite o tamanho do tabuleiro: \n")
-#   {size,_} = Integer.parse(v)
-#   minas = gen_mines_board(size)
-#   IO.inspect minas
-#   tabuleiro = Minesweeper.gera_tabuleiro(size)
-#   game_loop(minas,tabuleiro)
-#  end
-#  def game_loop(minas,tabuleiro) do
-#    IO.puts Minesweeper.board_to_string(tabuleiro)
-#    v = IO.gets("Digite uma linha: \n")
-#    {linha,_} = Integer.parse(v)
-#    v = IO.gets("Digite uma coluna: \n")
-#    {coluna,_} = Integer.parse(v)
-#    if (Minesweeper.is_mine(minas,linha,coluna)) do
-#      IO.puts "VOCÊ PERDEU!!!!!!!!!!!!!!!!"
-#      IO.puts Minesweeper.board_to_string(Minesweeper.abre_tabuleiro(minas,tabuleiro))
-#      IO.puts "TENTE NOVAMENTE!!!!!!!!!!!!"
-#    else
-#      novo_tabuleiro = Minesweeper.abre_jogada(linha,coluna,minas,tabuleiro)
-#      if (Minesweeper.end_game(minas,novo_tabuleiro)) do
-#          IO.puts "VOCÊ VENCEU!!!!!!!!!!!!!!"
-#          IO.puts Minesweeper.board_to_string(Minesweeper.abre_tabuleiro(minas,novo_tabuleiro))
-#          IO.puts "PARABÉNS!!!!!!!!!!!!!!!!!"
-#      else
-#          game_loop(minas,novo_tabuleiro)
-#      end
-#    end
-#  end
-#  def gen_mines_board(size) do
-#    add_mines(ceil(size*size*0.15), size, Minesweeper.gera_mapa_de_minas(size))
-#  end
-#  def add_mines(0,_size,mines), do: mines
-#  def add_mines(n,size,mines) do
-#    linha = :rand.uniform(size-1)
-#    coluna = :rand.uniform(size-1)
-#    if Minesweeper.is_mine(mines,linha,coluna) do
-#      add_mines(n,size,mines)
-#    else
-#      add_mines(n-1,size,Minesweeper.update_pos(mines,linha,coluna,true))
-#    end
-#  end
+ def main() do
+  v = IO.gets("Digite o tamanho do tabuleiro: \n")
+  {size,_} = Integer.parse(v)
+  minas = gen_mines_board(size)
+  IO.inspect minas
+  tabuleiro = Minesweeper.gera_tabuleiro(size)
+  game_loop(minas,tabuleiro)
+ end
+ def game_loop(minas,tabuleiro) do
+   IO.puts Minesweeper.board_to_string(tabuleiro)
+   v = IO.gets("Digite uma linha: \n")
+   {linha,_} = Integer.parse(v)
+   v = IO.gets("Digite uma coluna: \n")
+   {coluna,_} = Integer.parse(v)
+   if (Minesweeper.is_mine(minas,linha,coluna)) do
+     IO.puts "VOCÊ PERDEU!!!!!!!!!!!!!!!!"
+     IO.puts Minesweeper.board_to_string(Minesweeper.abre_tabuleiro(minas,tabuleiro))
+     IO.puts "TENTE NOVAMENTE!!!!!!!!!!!!"
+   else
+     novo_tabuleiro = Minesweeper.abre_jogada(linha,coluna,minas,tabuleiro)
+     if (Minesweeper.end_game(minas,novo_tabuleiro)) do
+         IO.puts "VOCÊ VENCEU!!!!!!!!!!!!!!"
+         IO.puts Minesweeper.board_to_string(Minesweeper.abre_tabuleiro(minas,novo_tabuleiro))
+         IO.puts "PARABÉNS!!!!!!!!!!!!!!!!!"
+     else
+         game_loop(minas,novo_tabuleiro)
+     end
+   end
+ end
+ def gen_mines_board(size) do
+   add_mines(ceil(size*size*0.15), size, Minesweeper.gera_mapa_de_minas(size))
+ end
+ def add_mines(0,_size,mines), do: mines
+ def add_mines(n,size,mines) do
+   linha = :rand.uniform(size-1)
+   coluna = :rand.uniform(size-1)
+   if Minesweeper.is_mine(mines,linha,coluna) do
+     add_mines(n,size,mines)
+   else
+     add_mines(n-1,size,Minesweeper.update_pos(mines,linha,coluna,true))
+   end
+ end
 end
 
-#Motor.main()
+Motor.main()
