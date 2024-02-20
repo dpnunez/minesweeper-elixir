@@ -39,8 +39,4 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir uma issue para r
 
 ## Autores
 
-Este projeto foi desenvolvido como parte da entrega final da disciplina de Programação Funcional na Universidade Federal de Pelotas. Os contribuidores principais são os estudantes envolvidos no desenvolvimento do jogo.
-
-## Licença
-
-Este projeto é distribuído sob a [Licença MIT](LICENSE). Consulte o arquivo LICENSE para obter mais informações.
+Este projeto foi desenvolvido como parte da entrega final da disciplina de Programação Funcional na Universidade Federal de Pelotas pelo aluno Daniel Pôrto Núñez.
