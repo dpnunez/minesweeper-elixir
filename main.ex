@@ -17,8 +17,6 @@ defmodule Minesweeper do
     ["-", "-", "-", "-", "-"]
   ]
 
-
-
   def get_tam([]), do: 0
   def get_tam([_h|t]), do: get_tam(t) + 1
   # PRIMEIRA PARTE - FUNÇÕES PARA MANIPULAR OS TABULEIROS DO JOGO (MATRIZES)
@@ -78,7 +76,7 @@ defmodule Minesweeper do
 
   # esse tabuleiro possuí minas nas posições 4x4 e 5x5
 
-  def is_mine(tab,l,c), do: get_pos(tab,l,c) == true
+  def is_mine(tab,l,c), do: is_valid_pos(get_tam(tab),l,c) && get_pos(tab,l,c) == true
 
   # is_valid_pos/3 recebe o tamanho do tabuleiro (ex, em um tabuleiro 9x9, o tamanho é 9),
   # uma linha e uma coluna, e diz se essa posição é válida no tabuleiro. Por exemplo, em um tabuleiro
@@ -147,6 +145,9 @@ defmodule Minesweeper do
   def abre_jogada([],_,tab), do: tab
   def abre_jogada(l,c,mines,tab) do
     cond do
+      !is_valid_pos(get_tam(mines),l,c) ->
+        IO.puts "Posição Inválida, insira novamente outra posição"
+        tab
       is_mine(mines,l,c) -> tab
       is_opened(tab,l,c) -> tab
       conta_minas_adj(mines,l,c) == 0 ->
