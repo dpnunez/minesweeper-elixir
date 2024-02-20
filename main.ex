@@ -204,7 +204,7 @@ defmodule Minesweeper do
     |> Enum.join(get_space_between_cells())
   end
 
-  def print_header(c_count), do: IO.puts(get_linecounter_space() <> get_columns(c_count))
+  def print_header(c_count), do: IO.puts IO.ANSI.green() <> get_linecounter_space() <> get_columns(c_count)
   def get_line_cells(line,c_count) do
       Range.new(0,c_count-1)
         |> Enum.map(fn x -> get_arr(line, x) end)
@@ -212,8 +212,7 @@ defmodule Minesweeper do
   end
 
   def print_line(line_vector,l,c_count) do
-    IO.puts Integer.to_string(l) <> "  | " <> get_line_cells(line_vector,c_count)
-    IO.puts ""
+    IO.puts IO.ANSI.green() <> Integer.to_string(l) <> "  | " <> IO.ANSI.white() <>  get_line_cells(line_vector,c_count)
   end
 
   def board_to_string(tab) do
@@ -225,7 +224,7 @@ defmodule Minesweeper do
       i+1
     end)
 
-    IO.puts "   " <> get_divider("-",qt_colunas + (qt_colunas * 3))
+    IO.puts IO.ANSI.green() <> "   " <> get_divider("-",qt_colunas + (qt_colunas * 3))
   end
 
 # gera_lista/2: recebe um inteiro n, um valor v, e gera uma lista contendo n vezes o valor v
