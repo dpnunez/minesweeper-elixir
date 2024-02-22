@@ -139,14 +139,14 @@ defmodule Minesweeper do
   # - Se a posição a ser aberta não possui minas adjacentes, abrimos ela com zero (0) e recursivamente abrimos
   # as outras posições adjacentes a ela
 
-  def is_opened(tab,l,c), do: get_pos(tab,l,c) != "-"
+  def is_opened(tab,l,c), do: is_number(get_pos(tab,l,c))
 
   def abre_jogada([{l,c}|t],mines,tab), do: abre_jogada(t,mines,abre_jogada(l,c,mines,tab))
   def abre_jogada([],_,tab), do: tab
   def abre_jogada(l,c,mines,tab) do
     cond do
       !is_valid_pos(get_tam(mines),l,c) ->
-        IO.puts "Posição Inválida, insira novamente outra posição"
+        IO.puts IO.ANSI.red() <> "Posição Inválida, insira novamente outra posição"
         tab
       is_mine(mines,l,c) -> tab
       is_opened(tab,l,c) -> tab
@@ -217,6 +217,7 @@ defmodule Minesweeper do
   end
 
   def board_to_string(tab) do
+    IO.puts "\n\n\n"
     qt_colunas = tab |> get_arr(0) |> get_tam()
     print_header(qt_colunas)
     IO.puts "   " <> get_divider("_",qt_colunas + (qt_colunas * 3))
@@ -249,7 +250,7 @@ defmodule Minesweeper do
     Enum.reduce(tab, 0, fn (linha,acc1) ->
       acc1 + Enum.reduce(linha, 0, fn (item, acc2) ->
         cond do
-          item == "-" -> acc2 + 1
+          !is_number(item) -> acc2 + 1
           true -> acc2
         end
       end)
@@ -303,30 +304,95 @@ defmodule Motor do
  end
 
 
+
+ def open_position(minas,tabuleiro) do
+  { linha, coluna } = get_user_coords(tabuleiro)
+
+  if (Minesweeper.is_mine(minas,linha,coluna)) do
+    IO.puts "VOCÊ PERDEU!!!!!!!!!!!!!!!!"
+    IO.puts Minesweeper.board_to_string(Minesweeper.abre_tabuleiro(minas,tabuleiro))
+    IO.puts "TENTE NOVAMENTE!!!!!!!!!!!!"
+    Motor.end_game()
+  else
+    novo_tabuleiro = Minesweeper.abre_jogada(linha,coluna,minas,tabuleiro)
+    if (Minesweeper.end_game(minas,novo_tabuleiro)) do
+        IO.puts "VOCÊ VENCEU!!!!!!!!!!!!!!"
+        IO.puts Minesweeper.board_to_string(Minesweeper.abre_tabuleiro(minas,novo_tabuleiro))
+        IO.puts "PARABÉNS!!!!!!!!!!!!!!!!!"
+        Motor.end_game()
+    else
+        game_loop(minas,novo_tabuleiro)
+    end
+  end
+ end
+
+ def put_flag(minas,tabuleiro) do
+  { linha, coluna } = get_user_coords(tabuleiro)
+  novo_tabuleiro = Minesweeper.update_pos(tabuleiro,linha,coluna,"F")
+  game_loop(minas,novo_tabuleiro)
+ end
+
+ def call_end_game(_,_) do
+  Motor.end_game()
+ end
+
+ def get_actions() do
+   [
+    {1, "Abrir posição", &Motor.open_position/2},
+    {2, "Colocar bandeira", &Motor.put_flag/2},
+    {3, "Sair", &Motor.call_end_game/2}
+  ]
+ end
+
+ def print_action([]), do: IO.puts ""
+
+ def print_action([{id, action, _}|t]) do
+   IO.puts "#{id} - #{action}"
+   print_action(t)
+ end
+
+ def menu_action() do
+    IO.puts IO.ANSI.blue()
+    IO.puts "Escolha uma ação: "
+    print_action(get_actions())
+
+    v = IO.gets("Digite o número da ação: \n")
+    {action,_} = Integer.parse(v)
+
+    if (Enum.find(get_actions(), fn {id, _, _} -> id == action end) == nil) do
+      IO.puts IO.ANSI.red() <> "Ação inválida, tente novamente"
+      menu_action()
+    else
+      IO.puts "aqui"
+      Enum.find(get_actions(), fn {id, _, _} -> id == action end)
+    end
+ end
+
+
+ def get_user_coords(tabuleiro) do
+  IO.puts IO.ANSI.magenta()
+  v = IO.gets("Digite uma linha: \n")
+  {linha,_} = Integer.parse(v)
+  v = IO.gets("Digite uma coluna: \n")
+  {coluna,_} = Integer.parse(v)
+
+  if (Minesweeper.is_valid_pos(Minesweeper.get_tam(tabuleiro),linha,coluna)) do
+    {linha, coluna}
+  else
+    IO.puts IO.ANSI.red() <> "Posição inválida, tente novamente"
+    get_user_coords(tabuleiro)
+  end
+ end
+
  def game_loop(minas,tabuleiro) do
    IO.puts Minesweeper.board_to_string(tabuleiro)
 
-   v = IO.gets("Digite uma linha: \n")
-   {linha,_} = Integer.parse(v)
-   v = IO.gets("Digite uma coluna: \n")
-   {coluna,_} = Integer.parse(v)
-   if (Minesweeper.is_mine(minas,linha,coluna)) do
-     IO.puts "VOCÊ PERDEU!!!!!!!!!!!!!!!!"
-     IO.puts Minesweeper.board_to_string(Minesweeper.abre_tabuleiro(minas,tabuleiro))
-     IO.puts "TENTE NOVAMENTE!!!!!!!!!!!!"
-     Motor.end_game()
-   else
-     novo_tabuleiro = Minesweeper.abre_jogada(linha,coluna,minas,tabuleiro)
-     if (Minesweeper.end_game(minas,novo_tabuleiro)) do
-         IO.puts "VOCÊ VENCEU!!!!!!!!!!!!!!"
-         IO.puts Minesweeper.board_to_string(Minesweeper.abre_tabuleiro(minas,novo_tabuleiro))
-         IO.puts "PARABÉNS!!!!!!!!!!!!!!!!!"
-         Motor.end_game()
-     else
-         game_loop(minas,novo_tabuleiro)
-     end
-   end
+   op = Motor.menu_action()
+   { _, _, optionFn } = op
+
+   optionFn.(minas,tabuleiro)
  end
+
  def gen_mines_board(size) do
    add_mines(ceil(size*size*0.15), size, Minesweeper.gera_mapa_de_minas(size))
  end
