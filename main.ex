@@ -287,7 +287,8 @@ defmodule Motor do
  def main() do
   v = IO.gets("Digite o tamanho do tabuleiro: \n")
   {size,_} = Integer.parse(v)
-  minas = gen_mines_board(size)
+  {_id,_label,m_percent,_color} = menu_difficult()
+  minas = gen_mines_board(size,m_percent)
   IO.inspect minas
   tabuleiro = Minesweeper.gera_tabuleiro(size)
   game_loop(minas,tabuleiro)
@@ -369,6 +370,38 @@ defmodule Motor do
  end
 
 
+ def get_difficults() do
+   [
+    {1, "Fácil", 0.15, IO.ANSI.green()},
+    {2, "Médio", 0.25, IO.ANSI.yellow()},
+    {3, "Difícil", 0.5, IO.ANSI.red()},
+    {4, "Impossivel", 0.9, IO.ANSI.red()}
+  ]
+ end
+
+  def print_difficult([]), do: IO.puts ""
+  def print_difficult([{id, action, _, color}|t]) do
+    IO.puts color <> "#{id} - #{action}"
+    print_difficult(t)
+  end
+
+ def menu_difficult() do
+    IO.puts IO.ANSI.blue()
+    IO.puts "Escolha uma dificuldade: "
+    print_difficult(get_difficults())
+
+    v = IO.gets(IO.ANSI.reset() <> "Digite o número da dificuldade " <> IO.ANSI.blue() <> IO.ANSI.italic() <> "(ou digite a porcentagem de minas) \n" <> IO.ANSI.reset())
+    {action,_} = Integer.parse(v)
+
+    if (Enum.find(get_difficults(), fn {id, _, _, _} -> id == action end) == nil) do
+      {value, _} = Float.parse(v)
+      {nil, nil, min(0.99, value), nil}
+    else
+      Enum.find(get_difficults(), fn {id, _, _, _} -> id == action end)
+    end
+ end
+
+
  def get_user_coords(tabuleiro) do
   IO.puts IO.ANSI.magenta()
   v = IO.gets("Digite uma linha: \n")
@@ -393,13 +426,19 @@ defmodule Motor do
    optionFn.(minas,tabuleiro)
  end
 
+
  def gen_mines_board(size) do
    add_mines(ceil(size*size*0.15), size, Minesweeper.gera_mapa_de_minas(size))
  end
+
+ def gen_mines_board(size,d) do
+   add_mines(floor(size*size*d), size, Minesweeper.gera_mapa_de_minas(size))
+ end
  def add_mines(0,_size,mines), do: mines
  def add_mines(n,size,mines) do
-   linha = :rand.uniform(size-1)
-   coluna = :rand.uniform(size-1)
+
+   linha = :rand.uniform(size) - 1
+   coluna = :rand.uniform(size) - 1
    if Minesweeper.is_mine(mines,linha,coluna) do
      add_mines(n,size,mines)
    else
