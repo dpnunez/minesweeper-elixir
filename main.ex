@@ -230,7 +230,7 @@ defmodule Minesweeper do
 
 # gera_lista/2: recebe um inteiro n, um valor v, e gera uma lista contendo n vezes o valor v
 
-  def gera_lista(0,v), do: []
+  def gera_lista(0,_v), do: []
   def gera_lista(n,v), do: [v|gera_lista(n-1,v)]
 
 # -- gera_tabuleiro/1: recebe o tamanho do tabuleiro de jogo e gera um tabuleiro  novo, todo fechado (todas as posições
@@ -282,7 +282,6 @@ end
 # A seguir está o motor do jogo!
 # Somente descomentar essas linhas quando as funções do módulo anterior estiverem
 # todas implementadas
-
 defmodule Motor do
  def main() do
   v = IO.gets("Digite o tamanho do tabuleiro: \n")
@@ -292,8 +291,21 @@ defmodule Motor do
   tabuleiro = Minesweeper.gera_tabuleiro(size)
   game_loop(minas,tabuleiro)
  end
+
+
+ def end_game() do
+    v = IO.gets("Fim de jogo, deseja iniciar outra partida? s/n")
+    if String.trim(v) == "s" do
+      Motor.main()
+    else
+      IO.puts "Até mais!"
+    end
+ end
+
+
  def game_loop(minas,tabuleiro) do
    IO.puts Minesweeper.board_to_string(tabuleiro)
+
    v = IO.gets("Digite uma linha: \n")
    {linha,_} = Integer.parse(v)
    v = IO.gets("Digite uma coluna: \n")
@@ -302,12 +314,14 @@ defmodule Motor do
      IO.puts "VOCÊ PERDEU!!!!!!!!!!!!!!!!"
      IO.puts Minesweeper.board_to_string(Minesweeper.abre_tabuleiro(minas,tabuleiro))
      IO.puts "TENTE NOVAMENTE!!!!!!!!!!!!"
+     Motor.end_game()
    else
      novo_tabuleiro = Minesweeper.abre_jogada(linha,coluna,minas,tabuleiro)
      if (Minesweeper.end_game(minas,novo_tabuleiro)) do
          IO.puts "VOCÊ VENCEU!!!!!!!!!!!!!!"
          IO.puts Minesweeper.board_to_string(Minesweeper.abre_tabuleiro(minas,novo_tabuleiro))
          IO.puts "PARABÉNS!!!!!!!!!!!!!!!!!"
+         Motor.end_game()
      else
          game_loop(minas,novo_tabuleiro)
      end
