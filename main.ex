@@ -296,7 +296,7 @@ defmodule Motor do
 
 
  def end_game() do
-    v = IO.gets("Fim de jogo, deseja iniciar outra partida? s/n")
+    v = IO.gets("Fim de jogo, deseja iniciar outra partida? s/[qualquer outra entrada]")
     if String.trim(v) == "s" do
       Motor.main()
     else
